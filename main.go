@@ -53,15 +53,20 @@ func findImport(p string) {
 	}
 	pkgs[p] = filter(pkg.Imports)
 	for _, pkg := range pkgs[p] {
-		findImport(pkg)
+		if (strings.HasPrefix(pkg, "github.com/ethereum/go-ethereum")) {
+			findImport(pkg)
+		}
 	}
 }
 
 func filter(s []string) []string {
+
 	var r []string
 	for _, v := range s {
-		if pkgmatch.MatchString(v) {
-			r = append(r, v)
+		if (strings.HasPrefix(v, "github.com/ethereum/go-ethereum")) {
+			if pkgmatch.MatchString(v) {
+				r = append(r, v)
+			}
 		}
 	}
 	return r
@@ -113,6 +118,16 @@ func main() {
 	check(cmd.Start())
 
 	fmt.Fprintf(in, "digraph {\n")
+	newPkgs := make(map[string][]string)
+	for k, v := range pkgs {
+		var r []string
+		for _, v := range v {
+			r = append(r, strings.Replace(v, "github.com/ethereum/go-ethereum/", "", 1))
+		}
+		newPkgs[strings.Replace(k, "github.com/ethereum/go-ethereum/", "", 1)] = r
+	}
+
+	pkgs = newPkgs
 	keys := keys()
 	for p, i := range keys {
 		fmt.Fprintf(in, "\tN%d [label=%q,shape=box];\n", i, p)
